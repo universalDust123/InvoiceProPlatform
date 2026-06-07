@@ -21,6 +21,15 @@ spring:
           batch_size: 20
     show-sql: ${JPA_SHOW_SQL}
 
+  management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
 
   servlet:
     multipart:
