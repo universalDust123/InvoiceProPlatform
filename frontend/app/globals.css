@@ -1,0 +1,155 @@
+/* ─── Google Fonts ──────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Reset ────────────────────────────────── */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: #050509;
+    color: #ffffff;
+    font-family: var(--font-dm-sans), sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay — gives the bg a subtle tactile grain */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.038;
+    pointer-events: none;
+    z-index: 9999;
+    mix-blend-mode: overlay;
+  }
+}
+
+/* ─── Custom Scrollbar ──────────────────────────── */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+/* ─── Utilities ─────────────────────────────────── */
+@layer utilities {
+  /* Animation fill */
+  .animate-fill-both {
+    animation-fill-mode: both;
+  }
+
+  /* Glass surface */
+  .glass {
+    background: rgba(255, 255, 255, 0.025);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+
+  .glass-heavy {
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+  }
+
+  /* Top-edge directional light highlight */
+  .edge-highlight {
+    position: relative;
+  }
+  .edge-highlight::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent
+    );
+    border-radius: 100%;
+  }
+
+  /* Ambient glow backdrop for metric cards */
+  .metric-glow-indigo::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    right: -20px;
+    bottom: -20px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+  }
+  .metric-glow-rose::after {
+    content: '';
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(244, 63, 94, 0.08) 0%, transparent 70%);
+    pointer-events: none; z-index: -1;
+  }
+  .metric-glow-emerald::after {
+    content: '';
+    position: absolute;
+    top: -20px; left: -20px; right: -20px; bottom: -20px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 70%);
+    pointer-events: none; z-index: -1;
+  }
+
+  /* Input focus glow */
+  .input-glow:focus {
+    box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.5), 0 0 0 3px rgba(99, 102, 241, 0.15);
+    outline: none;
+  }
+
+  /* Shimmer skeleton */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 25%,
+      rgba(255, 255, 255, 0.07) 50%,
+      rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+}
+
+/* ─── Selection ─────────────────────────────────── */
+::selection {
+  background: rgba(99, 102, 241, 0.35);
+  color: #fff;
+}
