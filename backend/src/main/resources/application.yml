@@ -21,14 +21,6 @@ spring:
           batch_size: 20
     show-sql: ${JPA_SHOW_SQL}
 
-  management:
-  endpoints:
-    web:
-      exposure:
-        include: health
-  endpoint:
-    health:
-      show-details: always
 
 
   servlet:
@@ -88,3 +80,14 @@ logging:
     name: ${LOG_FILE_NAME}
     max-size: ${LOG_MAX_SIZE}
     max-history: ${LOG_MAX_HISTORY}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+      mail:
+        enabled: false
