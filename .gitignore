@@ -1,0 +1,75 @@
+# Environment Variables
+.env
+.env.local
+.env.*.local
+.env.example
+
+# Backend (Java/Maven)
+backend/target/
+backend/build/
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/.classpath
+backend/.project
+backend/.settings/
+backend/.idea/
+backend/*.iml
+backend/logs/
+backend/*.log
+backend/out/
+
+# Frontend (Node.js/npm)
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/dist/
+frontend/build/
+frontend/.env.local
+frontend/.env.example
+frontend/.env.*.local
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/.pnp
+frontend/.pnp.js
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+.AppleDouble
+.LSOverride
+*.sublime-project
+*.sublime-workspace
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Docker
+docker-compose.override.yml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+!schema.sql
+
+# Compiled files
+*.class
+*.jar
+*.war
+
+# Misc
+.cache/
+.tmp/
+temp/
+*.bak
+*.md
+*.dockerignore
