@@ -4,13 +4,26 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 
 interface AddCustomerFormProps {
   onClose: () => void;
 }
 
+interface CustomerFormData {
+  name: string;
+  email: string;
+  phone: string;
+  billingAddress: string;
+  taxId: string;
+}
+
+interface ErrorResponse {
+  message: string;
+}
+
 export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<CustomerFormData>({
     name: "",
     email: "",
     phone: "",
@@ -21,13 +34,13 @@ export function AddCustomerForm({ onClose }: AddCustomerFormProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data) => customerApi.create(data),
+    mutationFn: (data: CustomerFormData) => customerApi.create(data),
     onSuccess: () => {
       toast.success("Customer added successfully");
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       toast.error(error.response?.data?.message || "Failed to add customer");
     },
   });
