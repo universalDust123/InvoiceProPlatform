@@ -5,7 +5,13 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { invoiceApi, customerApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { Trash2, Plus } from "lucide-react";
-import { sub } from "framer-motion/client";
+import { AxiosError } from "axios";
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface InvoiceItem {
   name: string;
@@ -15,17 +21,52 @@ interface InvoiceItem {
   taxPercentage: string;
 }
 
+interface ErrorResponse {
+  message: string;
+}
+
+interface InvoiceData {
+  customerId: string;
+  customerName: string;
+  issueDate: string;
+  dueDate: string;
+  notes: string;
+  subtotal: number;
+  taxTotal: number;
+  grandTotal: number;
+  items: {
+    name: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    taxPercentage: number;
+  }[];
+}
+
 interface AddInvoiceFormProps {
   onClose: () => void;
 }
 
+// Pure function to calculate default dates
+function getDefaultDates() {
+  const today = new Date();
+  const issueDate = today.toISOString().split("T")[0];
+
+  const dueDate = new Date();
+  dueDate.setDate(dueDate.getDate() + 30);
+  const dueDateStr = dueDate.toISOString().split("T")[0];
+
+  return { issueDate, dueDateStr };
+}
+
 export function AddInvoiceForm({ onClose }: AddInvoiceFormProps) {
+  const { issueDate: defaultIssueDate, dueDateStr: defaultDueDate } =
+    getDefaultDates();
+
   const [formData, setFormData] = useState({
     customerId: "",
-    issueDate: new Date().toISOString().split("T")[0],
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0],
+    issueDate: defaultIssueDate,
+    dueDate: defaultDueDate,
     notes: "",
   });
 
@@ -52,13 +93,13 @@ export function AddInvoiceForm({ onClose }: AddInvoiceFormProps) {
   });
 
   const mutation = useMutation({
-    mutationFn: (data) => invoiceApi.create(data),
+    mutationFn: (data: InvoiceData) => invoiceApi.create(data),
     onSuccess: () => {
       toast.success("Invoice created successfully");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       toast.error(error.response?.data?.message || "Failed to create invoice");
     },
   });
@@ -161,7 +202,8 @@ export function AddInvoiceForm({ onClose }: AddInvoiceFormProps) {
 
     const invoiceData = {
       customerId: formData.customerId,
-      customerName: customers.find((c) => c.id === formData.customerId)?.name || "",
+      customerName:
+        customers.find((c) => c.id === formData.customerId)?.name || "",
       issueDate: formData.issueDate,
       dueDate: formData.dueDate,
       notes: formData.notes,
@@ -199,7 +241,7 @@ export function AddInvoiceForm({ onClose }: AddInvoiceFormProps) {
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select a customer...</option>
-          {customers.map((customer: any) => (
+          {customers.map((customer: Customer) => (
             <option key={customer.id} value={customer.id}>
               {customer.name} ({customer.email})
             </option>
