@@ -10,6 +10,11 @@ spring:
     password: ${DB_PASSWORD}
     driver-class-name: ${DB_DRIVER}
 
+    hikari:
+      data-source-properties:
+        preferQueryMode: simple
+        prepareThreshold: 0
+
   jpa:
     hibernate:
       ddl-auto: ${JPA_DDL_AUTO}
