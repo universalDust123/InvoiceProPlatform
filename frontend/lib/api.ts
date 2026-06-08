@@ -1,7 +1,7 @@
 import apiClient from './api-client';
 
 export const authApi = {
-  register: (data: { fullName: string; email: string; password: string; tenantId: string }) =>
+  register: (data: { fullName: string; email: string; password: string; tenantId?: string }) =>
     apiClient.post('/api/auth/register', data),
   login: (data: { email: string; password: string; tenantId?: string }) =>
     apiClient.post('/api/auth/login', data),
@@ -29,6 +29,7 @@ export const customerApi = {
   update: (id: string, data: any) => apiClient.put(`/api/customers/${id}`, data),
   delete: (id: string) => apiClient.delete(`/api/customers/${id}`),
   getById: (id: string) => apiClient.get(`/api/customers/${id}`),
+  email: (id: string, data: any) => apiClient.post(`/api/customers/${id}/send-email`, data),
 };
 
 export const analyticsApi = {

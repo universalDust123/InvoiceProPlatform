@@ -4,16 +4,39 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { customerApi } from "@/lib/api";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  billingAddress?: string;
+  taxId?: string;
+}
+
+interface CustomerFormData {
+  name: string;
+  email: string;
+  phone: string;
+  billingAddress: string;
+  taxId: string;
+}
+
+interface ErrorResponse {
+  message: string;
+}
 
 interface UpdateCustomerFormProps {
-  customer: any;
+  customer: Customer;
   onClose: () => void;
 }
 
-export function UpdateCustomerForm({ customer, onClose }: UpdateCustomerFormProps) {
-  
-    
-  const [formData, setFormData] = useState({
+export function UpdateCustomerForm({
+  customer,
+  onClose,
+}: UpdateCustomerFormProps) {
+  const [formData, setFormData] = useState<CustomerFormData>({
     name: customer.name || "",
     email: customer.email || "",
     phone: customer.phone || "",
@@ -24,13 +47,14 @@ export function UpdateCustomerForm({ customer, onClose }: UpdateCustomerFormProp
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (data) => customerApi.update(customer.id, data),
+    mutationFn: (data: CustomerFormData) =>
+      customerApi.update(customer.id, data),
     onSuccess: () => {
       toast.success("Customer updated successfully");
       queryClient.invalidateQueries({ queryKey: ["customers"] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       toast.error(error.response?.data?.message || "Failed to update customer");
     },
   });
@@ -52,7 +76,7 @@ export function UpdateCustomerForm({ customer, onClose }: UpdateCustomerFormProp
       return;
     }
 
-    mutation.mutate({ id: customer.id, ...formData });
+    mutation.mutate(formData);
   };
 
   return (

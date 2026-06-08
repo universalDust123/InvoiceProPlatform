@@ -5,6 +5,13 @@ import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { invoiceApi, customerApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { Trash2, Plus } from "lucide-react";
+import { AxiosError } from "axios";
+
+interface Customer {
+  id: string;
+  name: string;
+  email: string;
+}
 
 interface InvoiceItem {
   name: string;
@@ -12,6 +19,45 @@ interface InvoiceItem {
   quantity: string;
   unitPrice: string;
   taxPercentage: string;
+}
+
+interface InvoiceItemResponse {
+  name: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  taxPercentage: number;
+}
+
+interface Invoice {
+  id: string;
+  customerId: string;
+  issueDate: string;
+  dueDate: string;
+  notes: string;
+  items: InvoiceItemResponse[];
+}
+
+interface ErrorResponse {
+  message: string;
+}
+
+interface InvoiceData {
+  customerId: string;
+  customerName: string;
+  issueDate: string;
+  dueDate: string;
+  notes: string;
+  subtotal: number;
+  taxTotal: number;
+  grandTotal: number;
+  items: {
+    name: string;
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    taxPercentage: number;
+  }[];
 }
 
 interface EditInvoiceFormProps {
@@ -33,7 +79,7 @@ export function EditInvoiceForm({ invoiceId, onClose }: EditInvoiceFormProps) {
   const queryClient = useQueryClient();
 
   // Fetch invoice data
-  const { data: invoice } = useQuery({
+  const { data: invoice } = useQuery<Invoice>({
     queryKey: ["invoice", invoiceId],
     queryFn: async () => {
       const response = await invoiceApi.getById(invoiceId);
@@ -42,7 +88,7 @@ export function EditInvoiceForm({ invoiceId, onClose }: EditInvoiceFormProps) {
   });
 
   // Fetch customers for dropdown
-  const { data: customers = [] } = useQuery({
+  const { data: customers = [] } = useQuery<Customer[]>({
     queryKey: ["customers"],
     queryFn: async () => {
       const response = await customerApi.list();
@@ -60,7 +106,7 @@ export function EditInvoiceForm({ invoiceId, onClose }: EditInvoiceFormProps) {
         notes: invoice.notes || "",
       });
       setItems(
-        invoice.items.map((item: any) => ({
+        invoice.items.map((item: InvoiceItemResponse) => ({
           name: item.name,
           description: item.description || "",
           quantity: item.quantity.toString(),
@@ -73,14 +119,14 @@ export function EditInvoiceForm({ invoiceId, onClose }: EditInvoiceFormProps) {
   }, [invoice]);
 
   const mutation = useMutation({
-    mutationFn: (data) => invoiceApi.update(invoiceId, data),
+    mutationFn: (data: InvoiceData) => invoiceApi.update(invoiceId, data),
     onSuccess: () => {
       toast.success("Invoice updated successfully");
       queryClient.invalidateQueries({ queryKey: ["invoices"] });
       queryClient.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       onClose();
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<ErrorResponse>) => {
       toast.error(error.response?.data?.message || "Failed to update invoice");
     },
   });
@@ -230,7 +276,7 @@ export function EditInvoiceForm({ invoiceId, onClose }: EditInvoiceFormProps) {
           className="w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Select a customer...</option>
-          {customers.map((customer: any) => (
+          {customers.map((customer: Customer) => (
             <option key={customer.id} value={customer.id}>
               {customer.name} ({customer.email})
             </option>
