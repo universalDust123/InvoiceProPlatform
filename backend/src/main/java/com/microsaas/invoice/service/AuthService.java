@@ -24,6 +24,11 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
 
     public AuthResponse register(RegisterRequest request) {
+
+        if(userRepository.existsByEmail(request.getEmail()) || userRepository.existsByTenantId(request.getTenantId())) {
+            throw new IllegalArgumentException("Either email or tenant ID already exists");
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .email(request.getEmail())
