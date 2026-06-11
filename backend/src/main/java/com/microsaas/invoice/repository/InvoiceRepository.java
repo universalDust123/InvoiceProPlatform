@@ -21,4 +21,5 @@ public interface InvoiceRepository extends JpaRepository<Invoice, String> {
     Optional<Invoice> findByInvoiceNumberAndTenantId(String invoiceNumber, String tenantId);
 
     Page<Invoice> findByTenantIdAndUserId(String tenantId, String userId, Pageable pageable);
+
 }

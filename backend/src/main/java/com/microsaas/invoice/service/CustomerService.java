@@ -5,6 +5,10 @@ import com.microsaas.invoice.entity.Customer;
 import com.microsaas.invoice.exception.ResourceNotFoundException;
 import com.microsaas.invoice.repository.CustomerRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,8 +25,11 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final TenantService tenantService;
 
-    public Page<CustomerDTO> getCustomers(Pageable pageable) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Cacheable(
+        value = "customerList",
+        key = "#tenantId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize"
+    )
+    public Page<CustomerDTO> getCustomers(Pageable pageable, String tenantId) {
         return customerRepository.findByTenantId(tenantId, pageable)
                 .map(this::convertToDTO);
     }
@@ -33,16 +40,22 @@ public class CustomerService {
                 .map(this::convertToDTO);
     }
 
-    public List<CustomerDTO> getAllCustomers() {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Cacheable(
+        value = "allCustomers",
+        key = "#tenantId"
+    )
+    public List<CustomerDTO> getAllCustomers(String tenantId) {
         return customerRepository.findByTenantId(tenantId)
                 .stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public CustomerDTO getCustomerById(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Cacheable(
+        value = "customerDetails",
+        key = "#tenantId + ':' + #id"
+    )
+    public CustomerDTO getCustomerById(String id, String tenantId) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
@@ -50,8 +63,13 @@ public class CustomerService {
         return convertToDTO(customer);
     }
 
-    public CustomerDTO createCustomer(CustomerDTO customerDTO) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Caching(evict = {
+        @CacheEvict(value = "customerList", allEntries = true),
+        @CacheEvict(value = "allCustomers", allEntries = true),
+        @CacheEvict(value = "customerSearch", allEntries = true),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })
+    public CustomerDTO createCustomer(CustomerDTO customerDTO, String tenantId) {
 
         Customer customer = Customer.builder()
                 .tenantId(tenantId)
@@ -66,8 +84,17 @@ public class CustomerService {
         return convertToDTO(savedCustomer);
     }
 
-    public CustomerDTO updateCustomer(String id, CustomerDTO customerDTO) {
-        String tenantId = tenantService.getCurrentTenantId();
+   @Caching(evict = {
+        @CacheEvict(
+            value = "customerDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "customerList", allEntries = true),
+        @CacheEvict(value = "allCustomers", allEntries = true),
+        @CacheEvict(value = "customerSearch", allEntries = true),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })
+    public CustomerDTO updateCustomer(String id, String tenantId, CustomerDTO customerDTO) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
@@ -83,8 +110,15 @@ public class CustomerService {
         return convertToDTO(updatedCustomer);
     }
 
-    public void deleteCustomer(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Caching(evict = {
+        @CacheEvict(value = "customerDetails",
+                key = "#tenantId + ':' + #id"),
+        @CacheEvict(value = "customerList", allEntries = true),
+        @CacheEvict(value = "allCustomers", allEntries = true),
+        @CacheEvict(value = "customerSearch", allEntries = true),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })
+    public void deleteCustomer(String id, String tenantId) {
         Customer customer = customerRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 

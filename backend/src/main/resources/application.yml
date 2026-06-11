@@ -14,6 +14,20 @@ spring:
       data-source-properties:
         preferQueryMode: simple
         prepareThreshold: 0
+    
+  data:
+      redis:
+        url: ${REDIS_HOST_URL}
+        # port: ${REDIS_PORT}
+        # password: ${REDIS_PASSWORD}
+        ssl:
+          enabled: true
+        lettuce:
+          pool:
+            max-active: 8
+            max-idle: 8
+            min-idle: 0
+            max-wait: -1ms
 
   jpa:
     hibernate:

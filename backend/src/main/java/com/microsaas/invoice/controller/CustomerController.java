@@ -2,6 +2,8 @@ package com.microsaas.invoice.controller;
 
 import com.microsaas.invoice.dto.CustomerDTO;
 import com.microsaas.invoice.service.CustomerService;
+import com.microsaas.invoice.service.TenantService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -21,17 +23,20 @@ import java.util.List;
 public class CustomerController {
 
     private final CustomerService customerService;
+    private final TenantService tenantService;
 
     @GetMapping
     @Operation(summary = "Get all customers with pagination")
     public ResponseEntity<Page<CustomerDTO>> getCustomers(Pageable pageable) {
-        return ResponseEntity.ok(customerService.getCustomers(pageable));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(customerService.getCustomers(pageable, tenantId));
     }
 
     @GetMapping("/list")
     @Operation(summary = "Get all customers as list")
     public ResponseEntity<List<CustomerDTO>> getAllCustomers() {
-        return ResponseEntity.ok(customerService.getAllCustomers());
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(customerService.getAllCustomers(tenantId));
     }
 
     @GetMapping("/search")
@@ -43,25 +48,29 @@ public class CustomerController {
     @GetMapping("/{id}")
     @Operation(summary = "Get customer by ID")
     public ResponseEntity<CustomerDTO> getCustomerById(@PathVariable String id) {
-        return ResponseEntity.ok(customerService.getCustomerById(id));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(customerService.getCustomerById(id, tenantId));
     }
 
     @PostMapping
     @Operation(summary = "Create new customer")
     public ResponseEntity<CustomerDTO> createCustomer(@Valid @RequestBody CustomerDTO customerDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.createCustomer(customerDTO));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(customerService.createCustomer(customerDTO, tenantId));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update customer")
     public ResponseEntity<CustomerDTO> updateCustomer(@PathVariable String id, @Valid @RequestBody CustomerDTO customerDTO) {
-        return ResponseEntity.ok(customerService.updateCustomer(id, customerDTO));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(customerService.updateCustomer(id,tenantId, customerDTO));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete customer")
     public ResponseEntity<Void> deleteCustomer(@PathVariable String id) {
-        customerService.deleteCustomer(id);
+        String tenantId = tenantService.getCurrentTenantId();
+        customerService.deleteCustomer(id, tenantId);
         return ResponseEntity.noContent().build();
     }
 }

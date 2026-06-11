@@ -13,6 +13,9 @@ import com.microsaas.invoice.repository.InvoiceItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -39,10 +42,12 @@ public class InvoiceService {
     private final EmailService emailService;
     private final PdfService pdfService;
     private final NotificationService notificationService;
-    
 
-    public Page<InvoiceDTO> getInvoices(Pageable pageable) {
-        String tenantId = tenantService.getCurrentTenantId();
+    // @Cacheable(
+    //     value = "invoiceList",
+    //     key = "#tenantId + ':' + #pageable.pageNumber + ':' + #pageable.pageSize"
+    // )
+    public Page<InvoiceDTO> getInvoices(Pageable pageable, String tenantId) {
         String userId = tenantService.getCurrentUserId();
         return invoiceRepository.findByTenantIdAndUserId(tenantId, userId, pageable)
                 .map(this::convertToDTO);
@@ -54,8 +59,8 @@ public class InvoiceService {
                 .map(this::convertToDTO);
     }
 
-    public InvoiceDTO getInvoiceById(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Cacheable(value = "invoiceDetails", key = "#tenantId + ':' + #id")
+    public InvoiceDTO getInvoiceById(String id, String tenantId) {
         if (tenantId == null || id == null) {
             throw new IllegalStateException("Tenant ID and invoice ID cannot be null");
         }
@@ -66,15 +71,21 @@ public class InvoiceService {
         return convertToDTO(invoice);
     }
 
-    public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Caching(evict = {
+        @CacheEvict(
+            value = "invoiceDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })     
+    public InvoiceDTO createInvoice(InvoiceDTO invoiceDTO, String tenantId) {
         String userId = tenantService.getCurrentUserId();
         if (tenantId == null || userId == null) {
             throw new IllegalStateException("Tenant ID and user ID cannot be null");
         }
         Customer customer = customerRepository.findById(invoiceDTO.getCustomerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -108,8 +119,14 @@ public class InvoiceService {
         return convertToDTO(finalInvoice);
     }
 
-    public InvoiceDTO updateInvoice(String id, InvoiceDTO invoiceDTO) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Caching(evict = {
+        @CacheEvict(
+            value = "invoiceDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })      
+    public InvoiceDTO updateInvoice(String id, String tenantId, InvoiceDTO invoiceDTO) {
         if (tenantId == null || id == null) {
             throw new IllegalStateException("Tenant ID and invoice ID cannot be null");
         }
@@ -158,8 +175,14 @@ public class InvoiceService {
         return convertToDTO(updatedInvoice);
     }
 
-    public InvoiceDTO sendInvoice(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+    @Caching(evict = {
+        @CacheEvict(
+            value = "invoiceDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    })  
+    public InvoiceDTO sendInvoice(String id, String tenantId) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
@@ -189,8 +212,16 @@ public class InvoiceService {
         return convertToDTO(updatedInvoice);
     }
 
-    public InvoiceDTO markAsPaid(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+    
+    @Caching(evict = {
+        @CacheEvict(
+            value = "invoiceDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "dashboardStats", allEntries = true),
+        @CacheEvict(value = "invoiceList", allEntries = true)
+    })  
+    public InvoiceDTO markAsPaid(String id, String tenantId) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 
@@ -212,8 +243,14 @@ public class InvoiceService {
         return convertToDTO(updatedInvoice);
     }
 
-    public void deleteInvoice(String id) {
-        String tenantId = tenantService.getCurrentTenantId();
+     @Caching(evict = {
+        @CacheEvict(
+            value = "invoiceDetails",
+            key = "#tenantId + ':' + #id"
+        ),
+        @CacheEvict(value = "dashboardStats", allEntries = true)
+    }) 
+    public void deleteInvoice(String id, String tenantId) {
         Invoice invoice = invoiceRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Invoice not found"));
 

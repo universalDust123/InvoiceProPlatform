@@ -6,6 +6,7 @@ import com.microsaas.invoice.dto.AuthResponse;
 import com.microsaas.invoice.dto.UserDTO;
 import com.microsaas.invoice.entity.User;
 import com.microsaas.invoice.entity.UserRole;
+import com.microsaas.invoice.exception.InvalidOperationException;
 import com.microsaas.invoice.exception.UnauthorizedException;
 import com.microsaas.invoice.repository.UserRepository;
 import com.microsaas.invoice.security.JwtTokenProvider;
@@ -25,20 +26,33 @@ public class AuthService {
 
     public AuthResponse register(RegisterRequest request) {
 
-        if(userRepository.existsByEmail(request.getEmail()) || userRepository.existsByTenantId(request.getTenantId())) {
-            throw new IllegalArgumentException("Either email or tenant ID already exists");
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new InvalidOperationException("Email already exists");
         }
 
-        User user = User.builder()
-                .fullName(request.getFullName())
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.ADMIN)
-                .tenantId(request.getTenantId())
-                .build();
+        if (userRepository.existsByTenantId(request.getTenantId())) {
+            throw new InvalidOperationException("Tenant ID already exists");
+        }
 
-        User savedUser = userRepository.save(user);
-        return buildAuthResponse(savedUser);
+        try {
+
+            User user = User.builder()
+                    .fullName(request.getFullName())
+                    .email(request.getEmail())
+                    .passwordHash(passwordEncoder.encode(request.getPassword()))
+                    .role(UserRole.ADMIN)
+                    .tenantId(request.getTenantId())
+                    .build();
+
+            User savedUser = userRepository.save(user);
+
+            return buildAuthResponse(savedUser);
+
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+
+            throw new InvalidOperationException(
+                    "Email or Tenant ID already exists");
+        }
     }
 
     public AuthResponse login(LoginRequest request) {

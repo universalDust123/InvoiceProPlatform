@@ -2,6 +2,8 @@ package com.microsaas.invoice.controller;
 
 import com.microsaas.invoice.dto.InvoiceDTO;
 import com.microsaas.invoice.service.InvoiceService;
+import com.microsaas.invoice.service.TenantService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -22,11 +24,13 @@ import org.springframework.web.bind.annotation.*;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final TenantService tenantService;
 
     @GetMapping
     @Operation(summary = "Get all invoices with pagination")
     public ResponseEntity<Page<InvoiceDTO>> getInvoices(Pageable pageable) {
-        return ResponseEntity.ok(invoiceService.getInvoices(pageable));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(invoiceService.getInvoices(pageable, tenantId));
     }
 
     @GetMapping("/search")
@@ -38,38 +42,44 @@ public class InvoiceController {
     @GetMapping("/{id}")
     @Operation(summary = "Get invoice by ID")
     public ResponseEntity<InvoiceDTO> getInvoiceById(@PathVariable String id) {
-        return ResponseEntity.ok(invoiceService.getInvoiceById(id));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(invoiceService.getInvoiceById(id, tenantId));
     }
 
     @PostMapping
     @Operation(summary = "Create new invoice")
     public ResponseEntity<InvoiceDTO> createInvoice(@Valid @RequestBody InvoiceDTO invoiceDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(invoiceService.createInvoice(invoiceDTO));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.status(HttpStatus.CREATED).body(invoiceService.createInvoice(invoiceDTO, tenantId));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Update invoice (only DRAFT status)")
     public ResponseEntity<InvoiceDTO> updateInvoice(@PathVariable String id,
             @Valid @RequestBody InvoiceDTO invoiceDTO) {
-        return ResponseEntity.ok(invoiceService.updateInvoice(id, invoiceDTO));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(invoiceService.updateInvoice(id, tenantId, invoiceDTO));
     }
 
     @PostMapping("/{id}/send")
     @Operation(summary = "Send invoice (changes status to SENT, making it immutable)")
     public ResponseEntity<InvoiceDTO> sendInvoice(@PathVariable String id) {
-        return ResponseEntity.ok(invoiceService.sendInvoice(id));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(invoiceService.sendInvoice(id, tenantId));
     }
 
     @PostMapping("/{id}/mark-paid")
     @Operation(summary = "Mark invoice as paid")
     public ResponseEntity<InvoiceDTO> markAsPaid(@PathVariable String id) {
-        return ResponseEntity.ok(invoiceService.markAsPaid(id));
+        String tenantId = tenantService.getCurrentTenantId();
+        return ResponseEntity.ok(invoiceService.markAsPaid(id, tenantId));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete invoice (only DRAFT status)")
     public ResponseEntity<Void> deleteInvoice(@PathVariable String id) {
-        invoiceService.deleteInvoice(id);
+        String tenantId = tenantService.getCurrentTenantId();
+        invoiceService.deleteInvoice(id, tenantId);
         return ResponseEntity.noContent().build();
     }
 
